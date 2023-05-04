@@ -18,6 +18,16 @@ pub struct Sheaf<T> {
     pub basis: HashSet<HashSet<Stalk<T>>>,
 }
 
+impl<T> Sheaf<T> {
+    pub fn new(sections: HashSet<Box<<Self as Presheaf<T>>::Section>>, stalks: HashSet<Stalk<T>>, basis: HashSet<HashSet<Stalk<T>>>) -> Self {
+        Self { sections, stalks, basis }
+    }
+    pub fn add_stalk(&mut self, stalk: Stalk<T>) {
+        self.stalks.insert(stalk);
+        // TODO: Also needs to be added to the basis.
+    }
+}
+
 impl <T> Presheaf<T> for Sheaf<T> {
     type Section = Box<dyn Fn(&HashSet<Stalk<T>>) -> T>;
     fn restriction(&self, section_from: Box<Self::Section>, section_to: Box<Self::Section>) -> Box<Self::Section> {
@@ -43,7 +53,7 @@ mod tests {
     }
 
     #[test]
-    fn compact_lattice() {
-        todo!();
+    fn finite_set() {
+        Sheaf
     }
 }
