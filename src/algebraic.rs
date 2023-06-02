@@ -7,7 +7,7 @@ use num::Integer;
 
 use num::complex::Complex;
 
-struct GroupFiber<G, O>
+struct GroupStalk<G, O>
 where
     G: Group<O>,
     O: Op,
@@ -16,7 +16,7 @@ where
     op: O,
 }
 
-impl<G, O> GroupFiber<G, O>
+impl<G, O> GroupStalk<G, O>
 where
     G: Group<O>,
     O: Op,
@@ -26,7 +26,7 @@ where
     }
 }
 
-struct GroupAbelianFiber<G, O>
+struct GroupAbelianStalk<G, O>
 where
     G: GroupAbelian<O>,
     O: Op,
@@ -35,7 +35,7 @@ where
     op: O,
 }
 
-impl<G, O> GroupAbelianFiber<G, O>
+impl<G, O> GroupAbelianStalk<G, O>
 where
     G: GroupAbelian<O>,
     O: Op,
