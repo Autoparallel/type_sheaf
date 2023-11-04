@@ -1,6 +1,9 @@
-use std::{collections::HashSet, hash::Hash};
+use std::{
+    any::Any,
+    collections::{HashMap, HashSet},
+};
 
-use crate::sheaf::TopologicalSpace;
+use crate::sheaf::{MetricSpace, PreSheaf, TopologicalSpace};
 
 pub trait CellComplex {
     type Cell;
@@ -54,6 +57,50 @@ impl TopologicalSpace for UndirectedGraph {
     }
 }
 
+impl MetricSpace for UndirectedGraph {
+    type Distance = Option<usize>;
+
+    fn distance(
+        &self,
+        point_a: <Self as TopologicalSpace>::Point,
+        point_b: <Self as TopologicalSpace>::Point,
+    ) -> Self::Distance {
+        let mut visited = HashSet::new();
+        let mut queue = vec![(point_a, 0)];
+        while let Some((point, distance)) = queue.pop() {
+            if point == point_b {
+                return Some(distance);
+            }
+            visited.insert(point);
+            for neighbor in self.neighborhood(point) {
+                if !visited.contains(&neighbor) {
+                    queue.push((neighbor, distance + 1));
+                }
+            }
+        }
+        None
+    }
+}
+
+impl PreSheaf for UndirectedGraph {
+    type TopologicalSpace = Self;
+    type Section = HashMap<<Self as TopologicalSpace>::Point, Box<dyn Any>>;
+
+    fn restriction(
+        &self,
+        set_to: <Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: Self::Section,
+    ) -> Self::Section {
+        let set_from = section.keys().cloned().collect::<HashSet<usize>>();
+        assert!(set_to.is_subset(&set_from));
+        let mut result = HashMap::new();
+        for (point, value) in section {
+            result.insert(point, value);
+        }
+        result
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -65,6 +112,7 @@ mod tests {
         vertices.insert(2);
         vertices.insert(3);
         vertices.insert(4);
+        vertices.insert(5);
 
         let mut edges = HashSet::new();
         edges.insert((1, 2));
@@ -72,5 +120,49 @@ mod tests {
         edges.insert((3, 4));
 
         UndirectedGraph::new(vertices, edges)
+    }
+
+    #[test]
+    fn graph_builds() {
+        let graph = create_graph();
+        assert_eq!(graph.vertices.len(), 5);
+        assert_eq!(graph.edges.len(), 3);
+    }
+
+    #[test]
+    fn graph_points() {
+        let graph = create_graph();
+        assert_eq!(graph.points(), graph.vertices);
+    }
+
+    #[test]
+    fn neighborhood() {
+        let graph = create_graph();
+        assert_eq!(
+            graph.neighborhood(1),
+            vec![2].into_iter().collect::<HashSet<_>>()
+        );
+        assert_eq!(
+            graph.neighborhood(2),
+            vec![1, 3].into_iter().collect::<HashSet<_>>()
+        );
+        assert_eq!(
+            graph.neighborhood(3),
+            vec![2, 4].into_iter().collect::<HashSet<_>>()
+        );
+        assert_eq!(
+            graph.neighborhood(4),
+            vec![3].into_iter().collect::<HashSet<_>>()
+        );
+    }
+
+    #[test]
+    fn distance() {
+        let graph = create_graph();
+        assert_eq!(graph.distance(1, 1), Some(0));
+        assert_eq!(graph.distance(1, 2), Some(1));
+        assert_eq!(graph.distance(1, 3), Some(2));
+        assert_eq!(graph.distance(1, 4), Some(3));
+        assert_eq!(graph.distance(1, 5), None);
     }
 }
