@@ -168,4 +168,25 @@ mod tests {
         assert_eq!(graph.distance(1, 4), Some(3));
         assert_eq!(graph.distance(1, 5), None);
     }
+
+    #[test]
+    fn restriction() {
+        let graph = create_graph();
+        let mut section = HashMap::new();
+        section.insert(1, Rc::new(1) as Rc<dyn Any>);
+        section.insert(2, Rc::new(2) as Rc<dyn Any>);
+        section.insert(3, Rc::new(3) as Rc<dyn Any>);
+
+        let set_to = vec![1, 2].into_iter().collect::<HashSet<_>>();
+        let restricted_section = graph.restriction(&set_to, &section);
+        println!("{:?}", restricted_section);
+        println!(
+            "{:?}",
+            restricted_section
+                .get(&1)
+                .unwrap()
+                .downcast_ref::<i32>()
+                .unwrap()
+        );
+    }
 }
