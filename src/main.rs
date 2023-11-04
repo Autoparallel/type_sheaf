@@ -1,8 +1,8 @@
 pub mod alexandrov;
-pub mod fiber;
-pub mod sheaf;
-pub mod sensor;
 pub mod merkle;
+pub mod sensor;
+pub mod sheaf;
+pub mod spaces;
 
 fn main() {
     println!("Hello, world!");
