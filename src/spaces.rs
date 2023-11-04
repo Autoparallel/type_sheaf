@@ -1,6 +1,7 @@
 use std::{
     any::Any,
     collections::{HashMap, HashSet},
+    rc::Rc,
 };
 
 use crate::sheaf::{MetricSpace, PreSheaf, TopologicalSpace};
@@ -84,20 +85,22 @@ impl MetricSpace for UndirectedGraph {
 
 impl PreSheaf for UndirectedGraph {
     type TopologicalSpace = Self;
-    type Section = HashMap<<Self as TopologicalSpace>::Point, Box<dyn Any>>;
+    type Section = HashMap<<Self as TopologicalSpace>::Point, Rc<dyn Any>>;
 
     fn restriction(
         &self,
-        set_to: <Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: Self::Section,
+        set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: &Self::Section,
     ) -> Self::Section {
         let set_from = section.keys().cloned().collect::<HashSet<usize>>();
         assert!(set_to.is_subset(&set_from));
-        let mut result = HashMap::new();
-        for (point, value) in section {
-            result.insert(point, value);
+        let mut restricted_section = HashMap::new();
+        for point in set_to.clone() {
+            if let Some(value) = section.get(&point) {
+                restricted_section.insert(point, value.clone());
+            }
         }
-        result
+        restricted_section
     }
 }
 

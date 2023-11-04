@@ -7,16 +7,6 @@ pub trait TopologicalSpace {
     fn neighborhood(&self, point: Self::Point) -> Self::OpenSet;
 }
 
-pub trait PreSheaf {
-    type TopologicalSpace: TopologicalSpace;
-    type Section;
-    fn restriction(
-        &self,
-        set_to: <Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: Self::Section,
-    ) -> Self::Section;
-}
-
 pub trait MetricSpace: TopologicalSpace {
     type Distance;
     fn distance(
@@ -24,4 +14,14 @@ pub trait MetricSpace: TopologicalSpace {
         point_a: <Self as TopologicalSpace>::Point,
         point_b: <Self as TopologicalSpace>::Point,
     ) -> Self::Distance;
+}
+
+pub trait PreSheaf {
+    type TopologicalSpace: TopologicalSpace;
+    type Section;
+    fn restriction(
+        &self,
+        set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: &Self::Section,
+    ) -> Self::Section;
 }
