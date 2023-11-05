@@ -1,4 +1,4 @@
-use std::{any::Any, collections::HashSet};
+use std::collections::HashSet;
 
 pub trait TopologicalSpace {
     type Point;

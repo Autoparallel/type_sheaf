@@ -1,15 +1,4 @@
-use std::{
-    any::Any,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
-
-use crate::sheaf::{MetricSpace, PreSheaf, TopologicalSpace};
-
-pub trait CellComplex {
-    type Cell;
-    fn attachment(&self, cell: Self::Cell) -> Self::Cell;
-}
+use super::*;
 
 pub struct UndirectedGraph {
     pub vertices: HashSet<usize>,
