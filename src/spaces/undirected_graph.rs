@@ -1,6 +1,6 @@
-use std::{sync::Arc, borrow::Borrow};
+use std::{borrow::Borrow, sync::Arc};
 
-use crate::topology::{Section, OpenSet};
+use crate::topology::{OpenSet, Section};
 
 use super::*;
 
@@ -112,10 +112,7 @@ impl Clone for Box<dyn EqAny> {
 impl Section for HashMap<usize, Box<dyn EqAny>> {
     type TopologicalSpace = UndirectedGraph;
 
-    fn restrict(
-        &self,
-        set_to: std::collections::HashSet<usize>,
-    ) -> Self {
+    fn restrict(&self, set_to: std::collections::HashSet<usize>) -> Self {
         let mut restricted_section = HashMap::new();
         for point in set_to.clone() {
             if let Some(value) = self.get(&point) {
@@ -124,11 +121,7 @@ impl Section for HashMap<usize, Box<dyn EqAny>> {
         }
         restricted_section
     }
-    fn glue(
-        &self,
-        domain: std::collections::HashSet<usize>,
-        section: Self,
-    ) -> Option<Self> {
+    fn glue(&self, domain: std::collections::HashSet<usize>, section: Self) -> Option<Self> {
         let mut glued_section = self.clone();
         for point in domain.clone() {
             if let Some(value) = section.get(&point) {

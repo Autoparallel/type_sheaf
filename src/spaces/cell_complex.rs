@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, hash::Hash, rc::Rc};
 
-use crate::topology::{TopologicalSpace, Sheaf, PreSheaf, OpenSet, Section};
+use crate::topology::{OpenSet, PreSheaf, Section, Sheaf, TopologicalSpace};
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Wrapper<T: Eq + Hash + Clone> {
@@ -83,6 +83,7 @@ impl<T: Eq + Hash + Clone> CellComplex<T> {
     }
 }
 
+// Implements OpenSets as HashSet<Wrapper<T>> for the cell complex topology.
 impl<T: Eq + Hash + Clone> OpenSet for HashSet<Wrapper<T>> {
     type Point = Wrapper<T>;
     fn intersect(&self, other: Self) -> Self {
@@ -133,8 +134,10 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
     }
 }
 
+// This implements the Presheaf conditions for the cell complex topology.
 impl<T: Eq + Hash + Clone, S: Section> PreSheaf<S> for CellComplex<T> {
     type TopologicalSpace = CellComplex<T>;
+    // Defines the restriction of a section to an open set.
     fn restriction(
         &self,
         set_to: &<<S as Section>::TopologicalSpace as TopologicalSpace>::OpenSet,
@@ -144,7 +147,9 @@ impl<T: Eq + Hash + Clone, S: Section> PreSheaf<S> for CellComplex<T> {
     }
 }
 
+// This implements the Sheaf conditions for the cell complex topology.
 impl<T: Eq + Hash + Clone, S: Section> Sheaf<S> for CellComplex<T> {
+    // This function glues sections together on the intersection of their domains.
     fn gluing(
         &self,
         sections: Vec<(
@@ -175,6 +180,7 @@ impl<T: Eq + Hash + Clone, S: Section> Sheaf<S> for CellComplex<T> {
         }
         global_section
     }
+    // This function checks if the sections are locally defined.
     fn uniqueness(
         &self,
         sections: Vec<(

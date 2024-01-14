@@ -43,14 +43,14 @@ pub trait Sheaf<S: Section>: PreSheaf<S> {
                 if i != j {
                     // Compute the intersection of domain_i and domain_j
                     let intersection = domain_i.intersect(domain_j.clone().clone());
-                    
+
                     // Check if the sections are compatible on the intersection
                     if !section_i.is_compatible(intersection, section_j.clone()) {
                         return None;
                     }
                 }
             }
-        };
+        }
         let mut global_section: Option<S> = None;
         for (domain, section) in sections {
             if global_section.is_none() {
@@ -58,12 +58,15 @@ pub trait Sheaf<S: Section>: PreSheaf<S> {
             } else {
                 global_section = global_section?.glue(domain.clone(), section);
             }
-            }
+        }
         global_section
     }
-    fn uniqueness(&self, sections: Vec<(&<S::TopologicalSpace as TopologicalSpace>::OpenSet, S, S)>) -> bool {
+    fn uniqueness(
+        &self,
+        sections: Vec<(&<S::TopologicalSpace as TopologicalSpace>::OpenSet, S, S)>,
+    ) -> bool {
         let mut all_unique = true;
-    
+
         for (domain, section_i, section_j) in sections {
             if section_i.restrict(domain.clone()) == section_j.restrict(domain.clone()) {
                 all_unique = false;
@@ -72,19 +75,26 @@ pub trait Sheaf<S: Section>: PreSheaf<S> {
         }
         all_unique
     }
-    
 }
 
 pub trait Section: Eq + PartialEq + Clone {
     type TopologicalSpace: TopologicalSpace;
-    
+
     fn restrict(&self, domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet) -> Self;
-    fn is_compatible(&self, domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet, section: Self) -> bool {
+    fn is_compatible(
+        &self,
+        domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: Self,
+    ) -> bool {
         if self.restrict(domain.clone()) == section.restrict(domain.clone()) {
             true
         } else {
             false
         }
     }
-    fn glue(&self, domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet, section: Self) -> Option<Self>;
+    fn glue(
+        &self,
+        domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: Self,
+    ) -> Option<Self>;
 }
