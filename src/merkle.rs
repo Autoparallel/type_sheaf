@@ -1,5 +1,5 @@
-use ring::digest::{SHA256, self};
 use hex;
+use ring::digest::{self, SHA256};
 
 #[derive(Debug, Clone)]
 pub struct Node<'a> {
@@ -10,7 +10,11 @@ pub struct Node<'a> {
 
 impl<'a> Node<'a> {
     pub fn new(value: Vec<&'a str>) -> Self {
-        Self { value: value.clone(), children: vec![], hash: hash(value) }
+        Self {
+            value: value.clone(),
+            children: vec![],
+            hash: hash(value),
+        }
     }
 
     pub fn hash_to_hex(&self) -> String {
@@ -58,7 +62,7 @@ mod tests {
         };
         let mut tree = Tree { root: root };
         println!("{:?}", tree.root.hash_to_hex());
-        
+
         let child_value = vec!["b"];
         let child = Node {
             value: child_value.clone(),
