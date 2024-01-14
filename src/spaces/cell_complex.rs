@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, hash::Hash, rc::Rc};
 
-use crate::topology::TopologicalSpace;
+use crate::topology::{TopologicalSpace, Sheaf, PreSheaf};
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Wrapper<T: Eq + Hash + Clone> {
@@ -51,7 +51,7 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
         self.children.push(child);
         self.dim = self.children.len()
     }
-    
+
     // This function decides which points from the n-cell to include in the next skeleton based on the identification map of the specific n-cell implementation.
     pub fn include_cell(
         &mut self,
@@ -123,5 +123,40 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
         } else {
             false
         }
+    }
+}
+
+impl<T: Eq + Hash + Clone, S> PreSheaf<S> for CellComplex<T> {
+    type TopologicalSpace = Self;
+
+    fn restriction(
+        &self,
+        set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: &S,
+    ) -> S {
+        todo!()
+    }
+}
+
+impl<T: Eq + Hash + Clone, S> Sheaf<S> for CellComplex<T> {
+    fn gluing(
+        &self,
+        sections: Vec<(
+            &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+            S,
+        )>,
+        gluing_domain: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+    ) -> Option<S> {
+        todo!()
+    }
+
+    fn is_locally_unique(
+        &self,
+        sections: Vec<(
+            &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+            S,
+        )>,
+    ) -> bool {
+        todo!()
     }
 }

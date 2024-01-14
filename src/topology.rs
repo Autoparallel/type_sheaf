@@ -17,12 +17,21 @@ pub trait MetricSpace: TopologicalSpace {
     ) -> Self::Distance;
 }
 
-pub trait PreSheaf {
+pub trait PreSheaf<S> {
     type TopologicalSpace: TopologicalSpace;
-    type Section;
     fn restriction(
         &self,
         set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: &Self::Section,
-    ) -> Self::Section;
+        section: &S,
+    ) -> S;
+}
+
+pub trait Sheaf<S>: PreSheaf<S> {
+    fn gluing(
+        &self,
+        sections: Vec<(&<Self::TopologicalSpace as TopologicalSpace>::OpenSet, S)>,
+        gluing_domain: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+    ) -> Option<S>;
+
+    fn is_locally_unique(&self, sections: Vec<(&<Self::TopologicalSpace as TopologicalSpace>::OpenSet, S)>) -> bool;
 }

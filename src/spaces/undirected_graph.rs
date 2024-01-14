@@ -76,15 +76,14 @@ impl MetricSpace for UndirectedGraph {
     }
 }
 
-impl PreSheaf for UndirectedGraph {
+impl PreSheaf<HashMap<usize, Rc<dyn Any>>> for UndirectedGraph {
     type TopologicalSpace = Self;
-    type Section = HashMap<<Self as TopologicalSpace>::Point, Rc<dyn Any>>;
 
     fn restriction(
         &self,
         set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: &Self::Section,
-    ) -> Self::Section {
+        section: &HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Rc<dyn Any>>,
+    ) -> HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Rc<dyn Any>> {
         let set_from = section.keys().cloned().collect::<HashSet<usize>>();
         assert!(set_to.is_subset(&set_from));
         let mut restricted_section = HashMap::new();
