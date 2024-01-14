@@ -5,6 +5,7 @@ pub trait TopologicalSpace {
     type OpenSet: IntoIterator<Item = Self::Point>;
     fn points(&self) -> HashSet<Self::Point>;
     fn neighborhood(&self, point: Self::Point) -> Self::OpenSet;
+    fn is_open(&self, open_set: Self::OpenSet) -> bool;
 }
 
 pub trait MetricSpace: TopologicalSpace {
