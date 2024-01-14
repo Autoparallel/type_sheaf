@@ -2,7 +2,7 @@
 
 use std::{collections::HashSet, hash::Hash, rc::Rc};
 
-use crate::topology::{TopologicalSpace, Sheaf, PreSheaf};
+use crate::topology::{TopologicalSpace, Sheaf, PreSheaf, OpenSet};
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub enum Wrapper<T: Eq + Hash + Clone> {
@@ -83,6 +83,13 @@ impl<T: Eq + Hash + Clone> CellComplex<T> {
     }
 }
 
+impl<T: Eq + Hash + Clone> OpenSet for HashSet<Wrapper<T>> {
+    type Point = Wrapper<T>;
+    fn intersect(&self, other: Self) -> Self {
+        self.intersection(&other).cloned().collect()
+    }
+}
+
 // This implements the weak topology on the cell complex, where the open sets are the sets who's intersections are open in every cell.
 impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
     type Point = Wrapper<T>;
@@ -123,40 +130,5 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
         } else {
             false
         }
-    }
-}
-
-impl<T: Eq + Hash + Clone, S> PreSheaf<S> for CellComplex<T> {
-    type TopologicalSpace = Self;
-
-    fn restriction(
-        &self,
-        set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: &S,
-    ) -> S {
-        todo!()
-    }
-}
-
-impl<T: Eq + Hash + Clone, S> Sheaf<S> for CellComplex<T> {
-    fn gluing(
-        &self,
-        sections: Vec<(
-            &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-            S,
-        )>,
-        gluing_domain: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-    ) -> Option<S> {
-        todo!()
-    }
-
-    fn is_locally_unique(
-        &self,
-        sections: Vec<(
-            &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-            S,
-        )>,
-    ) -> bool {
-        todo!()
     }
 }
