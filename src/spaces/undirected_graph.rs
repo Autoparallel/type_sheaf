@@ -45,6 +45,10 @@ impl TopologicalSpace for UndirectedGraph {
             })
             .collect()
     }
+
+    fn is_open(&self, _set: Self::OpenSet) -> bool {
+        true
+    }
 }
 
 impl MetricSpace for UndirectedGraph {

@@ -36,13 +36,12 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
     }
 
     pub fn include_cell(&mut self, cell: Rc<dyn Cell<T, Point = T, OpenSet = HashSet<T>>>) {
-        let mut new_cell = cell;
-        for points in new_cell.cell_points() {
-            if !new_cell.identification(&self).contains(&points) {
+        for points in cell.cell_points() {
+            if !cell.identification(&self).contains(&points) {
                 self.points.insert(points);
             } else {}
         }
-        self.cells.push(new_cell);
+        self.cells.push(cell);
     }
 }
 
@@ -74,7 +73,7 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
     fn neighborhood(&self, point: Self::Point) -> Self::OpenSet {
         let mut neighborhood = HashSet::new();
         for cell in &self.cells {
-            for neighbor in cell.neighborhood(point) {
+            for neighbor in cell.neighborhood(point.clone()) {
                 neighborhood.insert(neighbor);
             }
         }
