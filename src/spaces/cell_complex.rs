@@ -4,8 +4,13 @@ use std::{collections::HashSet, hash::Hash, rc::Rc};
 
 use crate::topology::TopologicalSpace;
 
+#[derive(Clone, Hash, PartialEq, Eq)]
+pub enum Wrapper<T: Eq + Hash + Clone> {
+    Point(T),
+}
+
 // Trait for an n-cell in a cell complex. Inherits from TopologicalSpace, and adds the cell's identification map.
-pub trait Cell<T: Eq + Hash + Clone>: TopologicalSpace<Point = T, OpenSet = HashSet<T>> {
+pub trait Cell<T: Eq + Hash + Clone>: TopologicalSpace<Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>> {
     fn cell_points(&self) -> Vec<<Self as TopologicalSpace>::Point> {
         self.points().into_iter().collect()
     }
@@ -17,8 +22,8 @@ pub trait Cell<T: Eq + Hash + Clone>: TopologicalSpace<Point = T, OpenSet = Hash
 
 // A skeleton is a collection of cells, glued together by their identification maps.
 pub struct Skeleton<T: Eq + Hash + Clone> {
-    pub cells: Vec<Rc<dyn Cell<T, Point = T, OpenSet = HashSet<T>>>>,
-    pub points: HashSet<T>,
+    pub cells: Vec<Rc<dyn Cell<T, Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>>>,
+    pub points: HashSet<Wrapper<T>>,
     pub dim: usize,
     pub children : Vec<Skeleton<T>>,
 }
@@ -26,7 +31,7 @@ pub struct Skeleton<T: Eq + Hash + Clone> {
 impl<T: Eq + Hash + Clone> Skeleton<T> {
     pub fn new() -> Self {
         let cells = Vec::new();
-        let points: HashSet<T> = HashSet::new();
+        let points: HashSet<Wrapper<T>> = HashSet::new();
         let dim = 0;
         Self { cells, points, dim, children: Vec::new() }
     }
@@ -35,7 +40,7 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
         self.dim = self.children.len()
     }
 
-    pub fn include_cell(&mut self, cell: Rc<dyn Cell<T, Point = T, OpenSet = HashSet<T>>>) {
+    pub fn include_cell(&mut self, cell: Rc<dyn Cell<T, Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>>) {
         for points in cell.cell_points() {
             if !cell.identification(&self).contains(&points) {
                 self.points.insert(points);
@@ -46,7 +51,7 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
 }
 
 pub struct CellComplex<T: Eq + Hash + Clone> {
-    pub cells: Vec<Rc<dyn Cell<T, Point = T, OpenSet = HashSet<T>>>>,
+    pub cells: Vec<Rc<dyn Cell<T, Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>>>,
     pub dim: usize,
 }
 
@@ -57,8 +62,8 @@ impl<T: Eq + Hash + Clone> CellComplex<T> {
 }
 
 impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
-    type Point = T;
-    type OpenSet = HashSet<T>;
+    type Point = Wrapper<T>;
+    type OpenSet = HashSet<Wrapper<T>>;
 
     fn points(&self) -> HashSet<Self::Point> {
         let mut points = HashSet::new();
@@ -80,7 +85,7 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
         neighborhood
     }
 
-    fn is_open(&self, set: HashSet<T>) -> bool {
+    fn is_open(&self, set: HashSet<Wrapper<T>>) -> bool {
         let mut status: Vec<bool> = Vec::new();
         for cell in &self.cells {
             let intersection: HashSet<_> = cell.points().intersection(&set).cloned().collect();
