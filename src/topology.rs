@@ -77,7 +77,7 @@ pub trait Sheaf<S: Section>: PreSheaf<S> {
 
 pub trait Section: Eq + PartialEq + Clone {
     type TopologicalSpace: TopologicalSpace;
-
+    
     fn restrict(&self, domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet) -> Self;
     fn is_compatible(&self, domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet, section: Self) -> bool {
         if self.restrict(domain.clone()) == section.restrict(domain.clone()) {
