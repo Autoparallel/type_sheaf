@@ -1,6 +1,5 @@
-use std::{borrow::Borrow, sync::Arc};
-
 use crate::topology::{OpenSet, Section};
+use std::hash::Hash;
 
 use super::*;
 
@@ -31,6 +30,9 @@ impl OpenSet for HashSet<usize> {
 
     fn intersect(&self, other: Self) -> Self {
         self.intersection(&other).cloned().collect()
+    }
+    fn union(&self, other: Self) -> Self {
+        self.union(&other).cloned().collect()
     }
 }
 
@@ -87,29 +89,11 @@ impl MetricSpace for UndirectedGraph {
         None
     }
 }
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+pub struct Data<T: Eq + Hash + Clone>(T);
 
-pub trait EqAny: Any {
-    fn as_any(&self) -> &dyn Any;
 
-    fn equals(&self, other: &dyn EqAny) -> bool;
-    fn clone_box(&self) -> Box<dyn EqAny>;
-}
-
-impl PartialEq for Box<dyn EqAny> {
-    fn eq(&self, other: &Self) -> bool {
-        self.equals(other.as_ref())
-    }
-}
-
-impl Eq for Box<dyn EqAny> {}
-
-impl Clone for Box<dyn EqAny> {
-    fn clone(&self) -> Self {
-        self.clone_box()
-    }
-}
-
-impl Section for HashMap<usize, Box<dyn EqAny>> {
+impl<T: Eq + Hash + Clone> Section for HashMap<usize, Data<T>> {
     type TopologicalSpace = UndirectedGraph;
 
     fn restrict(&self, set_to: std::collections::HashSet<usize>) -> Self {
@@ -132,14 +116,14 @@ impl Section for HashMap<usize, Box<dyn EqAny>> {
     }
 }
 
-impl PreSheaf<HashMap<usize, Box<dyn EqAny>>> for UndirectedGraph {
+impl<T: Eq + Hash + Clone> PreSheaf<HashMap<usize, Data<T>>> for UndirectedGraph {
     type TopologicalSpace = Self;
 
     fn restriction(
         &self,
         set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: &HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Box<dyn EqAny>>,
-    ) -> HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Box<dyn EqAny>> {
+        section: &HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Data<T>>,
+    ) -> HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Data<T>> {
         section.restrict(set_to.clone())
     }
 }
@@ -209,24 +193,22 @@ mod tests {
         assert_eq!(graph.distance(1, 5), None);
     }
 
-    // #[test]
-    // fn restriction() {
-    //     let graph = create_graph();
-    //     let mut section = HashMap::new();
-    //     section.insert(1, Rc::new(1) as Rc<dyn Any>);
-    //     section.insert(2, Rc::new(2) as Rc<dyn Any>);
-    //     section.insert(3, Rc::new(3) as Rc<dyn Any>);
+    #[test]
+    fn restriction() {
+        let graph = create_graph();
+        let mut section = HashMap::new();
+        section.insert(1, Data::<i32>(1));
+        section.insert(2, Data::<i32>(2));
+        section.insert(3, Data::<i32>(3));
 
-    //     let set_to = vec![1, 2].into_iter().collect::<HashSet<_>>();
-    //     let restricted_section = graph.restriction(&set_to, &section);
-    //     println!("{:?}", restricted_section);
-    //     println!(
-    //         "{:?}",
-    //         restricted_section
-    //             .get(&1)
-    //             .unwrap()
-    //             .downcast_ref::<i32>()
-    //             .unwrap()
-    //     );
-    // }
+        let set_to = vec![1, 2].into_iter().collect::<HashSet<_>>();
+        let restricted_section = graph.restriction(&set_to, &section);
+        println!("{:?}", restricted_section);
+        println!(
+            "{:?}",
+            restricted_section
+                .get(&1)
+                .unwrap()
+        );
+    }
 }

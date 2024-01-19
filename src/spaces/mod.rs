@@ -1,8 +1,4 @@
-use std::{
-    any::Any,
-    collections::{HashMap, HashSet},
-    rc::Rc,
-};
+use std::collections::{HashMap, HashSet};
 
 use crate::topology::{MetricSpace, PreSheaf, TopologicalSpace};
 

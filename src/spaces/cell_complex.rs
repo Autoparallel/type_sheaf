@@ -5,30 +5,19 @@ use std::{collections::HashSet, hash::Hash, rc::Rc};
 use crate::topology::{OpenSet, PreSheaf, Section, Sheaf, TopologicalSpace};
 
 #[derive(Clone, Hash, PartialEq, Eq)]
-pub enum Wrapper<T: Eq + Hash + Clone> {
-    Point(T),
-}
+pub struct Point<T: Eq + Hash + Clone>(T);
 
-// Trait for an n-cell in a cell complex. Inherits from TopologicalSpace, and adds the cell's identification map.
+/// Trait for an n-cell in a cell complex. Inherits from TopologicalSpace, and adds the cell's identification map.
 pub trait Cell<T: Eq + Hash + Clone>:
-    TopologicalSpace<Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>
+    TopologicalSpace<Point = Point<T>, OpenSet = HashSet<Point<T>>>
 {
-    fn cell_points(&self) -> Vec<<Self as TopologicalSpace>::Point> {
-        self.points().into_iter().collect()
-    }
-    fn cell_point_neighborhood(
-        &self,
-        point: <Self as TopologicalSpace>::Point,
-    ) -> Vec<<Self as TopologicalSpace>::Point> {
-        self.neighborhood(point).into_iter().collect()
-    }
     fn identification(&self, skeleton: &Skeleton<T>) -> HashSet<<Self as TopologicalSpace>::Point>; //Should return a set of points in the cell identified with previous skeleton points, and thus shouldn't be included in the next skeleton.
 }
 
-// A skeleton is a collection of cells, glued together by their identification maps.
+/// A skeleton is a collection of cells, glued together by their identification maps.
 pub struct Skeleton<T: Eq + Hash + Clone> {
-    pub cells: Vec<Rc<dyn Cell<T, Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>>>,
-    pub points: HashSet<Wrapper<T>>,
+    pub cells: Vec<Rc<dyn Cell<T, Point = Point<T>, OpenSet = HashSet<Point<T>>>>>,
+    pub points: HashSet<Point<T>>,
     pub dim: usize,
     pub children: Vec<Skeleton<T>>,
 }
@@ -36,7 +25,7 @@ pub struct Skeleton<T: Eq + Hash + Clone> {
 impl<T: Eq + Hash + Clone> Skeleton<T> {
     pub fn new() -> Self {
         let cells = Vec::new();
-        let points: HashSet<Wrapper<T>> = HashSet::new();
+        let points: HashSet<Point<T>> = HashSet::new();
         let dim = 0;
         Self {
             cells,
@@ -55,9 +44,9 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
     // This function decides which points from the n-cell to include in the next skeleton based on the identification map of the specific n-cell implementation.
     pub fn include_cell(
         &mut self,
-        cell: Rc<dyn Cell<T, Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>>,
+        cell: Rc<dyn Cell<T, Point = Point<T>, OpenSet = HashSet<Point<T>>>>,
     ) {
-        for points in cell.cell_points() {
+        for points in cell.points() {
             if !cell.identification(&self).contains(&points) {
                 self.points.insert(points);
             } else {
@@ -66,10 +55,10 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
         self.cells.push(cell);
     }
 }
-// This struct of a cell complex contains the collect of cells, the set of points from each cell composing the complex, and the maximal dimension of the complex.
+/// This struct of a cell complex contains the collect of cells, the set of points from each cell composing the complex, and the maximal dimension of the complex.
 pub struct CellComplex<T: Eq + Hash + Clone> {
-    pub cells: Vec<Rc<dyn Cell<T, Point = Wrapper<T>, OpenSet = HashSet<Wrapper<T>>>>>,
-    pub points: HashSet<Wrapper<T>>,
+    pub cells: Vec<Rc<dyn Cell<T, Point = Point<T>, OpenSet = HashSet<Point<T>>>>>,
+    pub points: HashSet<Point<T>>,
     pub dim: usize,
 }
 
@@ -83,18 +72,21 @@ impl<T: Eq + Hash + Clone> CellComplex<T> {
     }
 }
 
-// Implements OpenSets as HashSet<Wrapper<T>> for the cell complex topology.
-impl<T: Eq + Hash + Clone> OpenSet for HashSet<Wrapper<T>> {
-    type Point = Wrapper<T>;
+/// Implements OpenSets as HashSet<Point<T>> for the cell complex topology.
+impl<T: Eq + Hash + Clone> OpenSet for HashSet<Point<T>> {
+    type Point = Point<T>;
     fn intersect(&self, other: Self) -> Self {
         self.intersection(&other).cloned().collect()
     }
+    fn union(&self, other: Self) -> Self {
+        self.union(&other).cloned().collect()
+    }
 }
 
-// This implements the weak topology on the cell complex, where the open sets are the sets who's intersections are open in every cell.
+/// This implements the weak topology on the cell complex, where the open sets are the sets who's intersections are open in every cell.
 impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
-    type Point = Wrapper<T>;
-    type OpenSet = HashSet<Wrapper<T>>;
+    type Point = Point<T>;
+    type OpenSet = HashSet<Point<T>>;
 
     fn points(&self) -> HashSet<Self::Point> {
         let mut points = HashSet::new();
@@ -116,7 +108,7 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
         neighborhood
     }
 
-    fn is_open(&self, set: HashSet<Wrapper<T>>) -> bool {
+    fn is_open(&self, set: HashSet<Point<T>>) -> bool {
         let mut status: Vec<bool> = Vec::new();
         for cell in &self.cells {
             let intersection: HashSet<_> = cell.points().intersection(&set).cloned().collect();
@@ -134,7 +126,7 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
     }
 }
 
-// This implements the Presheaf conditions for the cell complex topology.
+/// This implements the Presheaf conditions for the cell complex topology.
 impl<T: Eq + Hash + Clone, S: Section> PreSheaf<S> for CellComplex<T> {
     type TopologicalSpace = CellComplex<T>;
     // Defines the restriction of a section to an open set.
@@ -147,7 +139,7 @@ impl<T: Eq + Hash + Clone, S: Section> PreSheaf<S> for CellComplex<T> {
     }
 }
 
-// This implements the Sheaf conditions for the cell complex topology.
+/// This implements the Sheaf conditions for the cell complex topology.
 impl<T: Eq + Hash + Clone, S: Section> Sheaf<S> for CellComplex<T> {
     // This function glues sections together on the intersection of their domains.
     fn gluing(
@@ -161,7 +153,7 @@ impl<T: Eq + Hash + Clone, S: Section> Sheaf<S> for CellComplex<T> {
             for (j, (domain_j, section_j)) in sections.iter().enumerate() {
                 if i != j {
                     // Compute the intersection of domain_i and domain_j
-                    let intersection = domain_i.intersect(domain_j.clone().clone());
+                    let intersection = domain_i.intersect((*domain_j).clone());
 
                     // Check if the sections are compatible on the intersection
                     if !section_i.is_compatible(intersection, section_j.clone()) {
@@ -197,5 +189,53 @@ impl<T: Eq + Hash + Clone, S: Section> Sheaf<S> for CellComplex<T> {
             }
         }
         all_unique
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_basic_complex() {
+        struct CellStruct {
+            points: HashSet<Point<usize>>,
+            dim: usize,
+        }
+
+        impl TopologicalSpace for CellStruct { // This is a horribly useless topology for testing purposes.
+            type Point = Point<usize>;
+            type OpenSet = HashSet<Point<usize>>;
+            fn points(&self) -> HashSet<Self::Point> {
+                self.points.clone()
+            }
+            fn neighborhood(&self, _point: Self::Point) -> Self::OpenSet {
+                let mut neighborhood = HashSet::new();
+                for neighbor in self.points.clone() {
+                    neighborhood.insert(neighbor);
+                }
+                neighborhood
+            }
+            fn is_open(&self, _set: Self::OpenSet) -> bool {
+                true
+            }
+        }
+        impl Cell<usize> for CellStruct {
+            fn identification(&self, skeleton: &Skeleton<usize>) -> HashSet<Point<usize>> {
+                let mut identification = HashSet::new();
+                for point in skeleton.points.clone() {
+                    identification.insert(point);
+                }
+                identification
+            }
+        }
+        let mut skeleton_0: Skeleton<usize> = Skeleton::new();
+        let first_cell = Rc::new(CellStruct {
+            points: vec![Point(0), Point(1)].into_iter().collect(),
+            dim: 0,
+        });
+        skeleton_0.include_cell(first_cell);
+
     }
 }

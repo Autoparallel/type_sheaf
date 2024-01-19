@@ -1,4 +1,3 @@
-use std::cmp::PartialOrd;
 
 pub trait PreOrderedSet {
     type Element;

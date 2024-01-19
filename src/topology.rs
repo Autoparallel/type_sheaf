@@ -3,6 +3,7 @@ use std::collections::HashSet;
 pub trait OpenSet: IntoIterator<Item = Self::Point> + Clone {
     type Point;
     fn intersect(&self, other: Self) -> Self;
+    fn union(&self, other: Self) -> Self;
 }
 
 pub trait TopologicalSpace {
@@ -42,7 +43,7 @@ pub trait Sheaf<S: Section>: PreSheaf<S> {
             for (j, (domain_j, section_j)) in sections.iter().enumerate() {
                 if i != j {
                     // Compute the intersection of domain_i and domain_j
-                    let intersection = domain_i.intersect(domain_j.clone().clone());
+                    let intersection = domain_i.intersect((*domain_j).clone());
 
                     // Check if the sections are compatible on the intersection
                     if !section_i.is_compatible(intersection, section_j.clone()) {
