@@ -92,7 +92,6 @@ impl MetricSpace for UndirectedGraph {
 #[derive(Clone, Eq, PartialEq, Hash, Debug)]
 pub struct Data<T: Eq + Hash + Clone>(T);
 
-
 impl<T: Eq + Hash + Clone> Section for HashMap<usize, Data<T>> {
     type TopologicalSpace = UndirectedGraph;
 
@@ -204,11 +203,6 @@ mod tests {
         let set_to = vec![1, 2].into_iter().collect::<HashSet<_>>();
         let restricted_section = graph.restriction(&set_to, &section);
         println!("{:?}", restricted_section);
-        println!(
-            "{:?}",
-            restricted_section
-                .get(&1)
-                .unwrap()
-        );
+        println!("{:?}", restricted_section.get(&1).unwrap());
     }
 }

@@ -192,7 +192,6 @@ impl<T: Eq + Hash + Clone, S: Section> Sheaf<S> for CellComplex<T> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -200,29 +199,55 @@ mod tests {
     #[test]
     fn build_basic_complex() {
         struct CellStruct {
-            points: HashSet<Point<usize>>,
+            points: HashSet<Point<i32>>,
             dim: usize,
         }
 
-        impl TopologicalSpace for CellStruct { // This is a horribly useless topology for testing purposes.
-            type Point = Point<usize>;
-            type OpenSet = HashSet<Point<usize>>;
+        impl TopologicalSpace for CellStruct {
+            type Point = Point<i32>;
+            type OpenSet = HashSet<Point<i32>>;
             fn points(&self) -> HashSet<Self::Point> {
                 self.points.clone()
             }
-            fn neighborhood(&self, _point: Self::Point) -> Self::OpenSet {
+            fn neighborhood(&self, point: Self::Point) -> Self::OpenSet {
                 let mut neighborhood = HashSet::new();
                 for neighbor in self.points.clone() {
-                    neighborhood.insert(neighbor);
+                    if (neighbor.0 - point.0).abs() <= 1_i32 {
+                        // neighborhood is the set of points within 1 of the given point
+                        neighborhood.insert(neighbor);
+                    }
                 }
                 neighborhood
             }
-            fn is_open(&self, _set: Self::OpenSet) -> bool {
-                true
+            fn is_open(&self, set: Self::OpenSet) -> bool {
+                for point in set.clone() {
+                    if !self.points.contains(&point) {
+                        return false;
+                    }
+                }
+                if set == self.points {
+                    return true;
+                } else if set.is_empty() {
+                    return true;
+                } else {
+                    for points in &self.points {
+                        let mut is_neighborhood = true;
+                        for neighbor in &set {
+                            if (neighbor.0 - points.0).abs() > 1_i32 {
+                                is_neighborhood = false;
+                                break;
+                            }
+                        }
+                        if is_neighborhood {
+                            return true;
+                        }
+                    }
+                    false
+                }
             }
         }
-        impl Cell<usize> for CellStruct {
-            fn identification(&self, skeleton: &Skeleton<usize>) -> HashSet<Point<usize>> {
+        impl Cell<i32> for CellStruct {
+            fn identification(&self, skeleton: &Skeleton<i32>) -> HashSet<Point<i32>> {
                 let mut identification = HashSet::new();
                 for point in skeleton.points.clone() {
                     identification.insert(point);
@@ -230,12 +255,13 @@ mod tests {
                 identification
             }
         }
-        let mut skeleton_0: Skeleton<usize> = Skeleton::new();
+        let mut skeleton_0: Skeleton<i32> = Skeleton::new();
         let first_cell = Rc::new(CellStruct {
-            points: vec![Point(0), Point(1)].into_iter().collect(),
+            points: vec![Point(0), Point(1), Point(2), Point(3)]
+                .into_iter()
+                .collect(),
             dim: 0,
         });
         skeleton_0.include_cell(first_cell);
-
     }
 }
