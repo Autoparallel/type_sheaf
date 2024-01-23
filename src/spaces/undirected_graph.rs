@@ -1,3 +1,6 @@
+use crate::topology::{OpenSet, Section};
+use std::hash::Hash;
+
 use super::*;
 
 pub struct UndirectedGraph {
@@ -19,6 +22,17 @@ impl UndirectedGraph {
             "All edges must be between vertices",
         );
         Self { vertices, edges }
+    }
+}
+
+impl OpenSet for HashSet<usize> {
+    type Point = usize;
+
+    fn intersect(&self, other: Self) -> Self {
+        self.intersection(&other).cloned().collect()
+    }
+    fn union(&self, other: Self) -> Self {
+        self.union(&other).cloned().collect()
     }
 }
 
@@ -44,6 +58,10 @@ impl TopologicalSpace for UndirectedGraph {
                 }
             })
             .collect()
+    }
+
+    fn is_open(&self, _set: Self::OpenSet) -> bool {
+        true
     }
 }
 
@@ -71,25 +89,41 @@ impl MetricSpace for UndirectedGraph {
         None
     }
 }
+#[derive(Clone, Eq, PartialEq, Hash, Debug)]
+pub struct Data<T: Eq + Hash + Clone>(T);
 
-impl PreSheaf for UndirectedGraph {
-    type TopologicalSpace = Self;
-    type Section = HashMap<<Self as TopologicalSpace>::Point, Rc<dyn Any>>;
+impl<T: Eq + Hash + Clone> Section for HashMap<usize, Data<T>> {
+    type TopologicalSpace = UndirectedGraph;
 
-    fn restriction(
-        &self,
-        set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: &Self::Section,
-    ) -> Self::Section {
-        let set_from = section.keys().cloned().collect::<HashSet<usize>>();
-        assert!(set_to.is_subset(&set_from));
+    fn restrict(&self, set_to: std::collections::HashSet<usize>) -> Self {
         let mut restricted_section = HashMap::new();
         for point in set_to.clone() {
-            if let Some(value) = section.get(&point) {
+            if let Some(value) = self.get(&point) {
                 restricted_section.insert(point, value.clone());
             }
         }
         restricted_section
+    }
+    fn glue(&self, domain: std::collections::HashSet<usize>, section: Self) -> Option<Self> {
+        let mut glued_section = self.clone();
+        for point in domain.clone() {
+            if let Some(value) = section.get(&point) {
+                glued_section.insert(point, value.clone());
+            }
+        }
+        Some(glued_section)
+    }
+}
+
+impl<T: Eq + Hash + Clone> PreSheaf<HashMap<usize, Data<T>>> for UndirectedGraph {
+    type TopologicalSpace = Self;
+
+    fn restriction(
+        &self,
+        set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
+        section: &HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Data<T>>,
+    ) -> HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Data<T>> {
+        section.restrict(set_to.clone())
     }
 }
 
@@ -162,20 +196,13 @@ mod tests {
     fn restriction() {
         let graph = create_graph();
         let mut section = HashMap::new();
-        section.insert(1, Rc::new(1) as Rc<dyn Any>);
-        section.insert(2, Rc::new(2) as Rc<dyn Any>);
-        section.insert(3, Rc::new(3) as Rc<dyn Any>);
+        section.insert(1, Data::<i32>(1));
+        section.insert(2, Data::<i32>(2));
+        section.insert(3, Data::<i32>(3));
 
         let set_to = vec![1, 2].into_iter().collect::<HashSet<_>>();
         let restricted_section = graph.restriction(&set_to, &section);
         println!("{:?}", restricted_section);
-        println!(
-            "{:?}",
-            restricted_section
-                .get(&1)
-                .unwrap()
-                .downcast_ref::<i32>()
-                .unwrap()
-        );
+        println!("{:?}", restricted_section.get(&1).unwrap());
     }
 }
