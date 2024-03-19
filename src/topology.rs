@@ -1,16 +1,16 @@
 use std::collections::HashSet;
 
-pub trait OpenSet: IntoIterator<Item = Self::Point> + Clone {
-    type Point;
+pub trait OpenSet: IntoIterator<Item = Self::Element> + Clone {
+    type Element;
     fn intersect(&self, other: Self) -> Self;
     fn union(&self, other: Self) -> Self;
 }
 
 pub trait TopologicalSpace {
-    type Point;
-    type OpenSet: OpenSet<Point = Self::Point>;
-    fn points(&self) -> HashSet<Self::Point>;
-    fn neighborhood(&self, point: Self::Point) -> Self::OpenSet;
+    type Element;
+    type OpenSet: OpenSet<Element = Self::Element>;
+    fn elements(&self) -> HashSet<Self::Element>;
+    fn neighborhood(&self, point: Self::Element) -> Self::OpenSet;
     fn is_open(&self, open_set: Self::OpenSet) -> bool;
 }
 
@@ -18,8 +18,8 @@ pub trait MetricSpace: TopologicalSpace {
     type Distance;
     fn distance(
         &self,
-        point_a: <Self as TopologicalSpace>::Point,
-        point_b: <Self as TopologicalSpace>::Point,
+        point_a: <Self as TopologicalSpace>::Element,
+        point_b: <Self as TopologicalSpace>::Element,
     ) -> Self::Distance;
 }
 
@@ -80,7 +80,6 @@ pub trait Sheaf<S: Section>: PreSheaf<S> {
 
 pub trait Section: Eq + PartialEq + Clone {
     type TopologicalSpace: TopologicalSpace;
-
     fn restrict(&self, domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet) -> Self;
     fn is_compatible(
         &self,

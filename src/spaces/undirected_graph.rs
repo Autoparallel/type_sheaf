@@ -26,7 +26,7 @@ impl UndirectedGraph {
 }
 
 impl OpenSet for HashSet<usize> {
-    type Point = usize;
+    type Element = usize;
 
     fn intersect(&self, other: Self) -> Self {
         self.intersection(&other).cloned().collect()
@@ -37,21 +37,21 @@ impl OpenSet for HashSet<usize> {
 }
 
 impl TopologicalSpace for UndirectedGraph {
-    type Point = usize;
+    type Element = usize;
 
-    type OpenSet = HashSet<Self::Point>;
+    type OpenSet = HashSet<Self::Element>;
 
-    fn points(&self) -> HashSet<Self::Point> {
+    fn elements(&self) -> HashSet<Self::Element> {
         self.vertices.clone()
     }
 
-    fn neighborhood(&self, point: Self::Point) -> Self::OpenSet {
+    fn neighborhood(&self, element: Self::Element) -> Self::OpenSet {
         self.edges
             .iter()
             .filter_map(|(a, b)| {
-                if *a == point {
+                if *a == element {
                     Some(*b)
-                } else if *b == point {
+                } else if *b == element {
                     Some(*a)
                 } else {
                     None
@@ -70,17 +70,17 @@ impl MetricSpace for UndirectedGraph {
 
     fn distance(
         &self,
-        point_a: <Self as TopologicalSpace>::Point,
-        point_b: <Self as TopologicalSpace>::Point,
+        element_a: <Self as TopologicalSpace>::Element,
+        element_b: <Self as TopologicalSpace>::Element,
     ) -> Self::Distance {
         let mut visited = HashSet::new();
-        let mut queue = vec![(point_a, 0)];
-        while let Some((point, distance)) = queue.pop() {
-            if point == point_b {
+        let mut queue = vec![(element_a, 0)];
+        while let Some((element, distance)) = queue.pop() {
+            if element == element_b {
                 return Some(distance);
             }
-            visited.insert(point);
-            for neighbor in self.neighborhood(point) {
+            visited.insert(element);
+            for neighbor in self.neighborhood(element) {
                 if !visited.contains(&neighbor) {
                     queue.push((neighbor, distance + 1));
                 }
@@ -97,18 +97,18 @@ impl<T: Eq + Hash + Clone> Section for HashMap<usize, Data<T>> {
 
     fn restrict(&self, set_to: std::collections::HashSet<usize>) -> Self {
         let mut restricted_section = HashMap::new();
-        for point in set_to.clone() {
-            if let Some(value) = self.get(&point) {
-                restricted_section.insert(point, value.clone());
+        for element in set_to.clone() {
+            if let Some(value) = self.get(&element) {
+                restricted_section.insert(element, value.clone());
             }
         }
         restricted_section
     }
     fn glue(&self, domain: std::collections::HashSet<usize>, section: Self) -> Option<Self> {
         let mut glued_section = self.clone();
-        for point in domain.clone() {
-            if let Some(value) = section.get(&point) {
-                glued_section.insert(point, value.clone());
+        for element in domain.clone() {
+            if let Some(value) = section.get(&element) {
+                glued_section.insert(element, value.clone());
             }
         }
         Some(glued_section)
@@ -121,8 +121,8 @@ impl<T: Eq + Hash + Clone> PreSheaf<HashMap<usize, Data<T>>> for UndirectedGraph
     fn restriction(
         &self,
         set_to: &<Self::TopologicalSpace as TopologicalSpace>::OpenSet,
-        section: &HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Data<T>>,
-    ) -> HashMap<<Self::TopologicalSpace as TopologicalSpace>::Point, Data<T>> {
+        section: &HashMap<<Self::TopologicalSpace as TopologicalSpace>::Element, Data<T>>,
+    ) -> HashMap<<Self::TopologicalSpace as TopologicalSpace>::Element, Data<T>> {
         section.restrict(set_to.clone())
     }
 }
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn graph_points() {
         let graph = create_graph();
-        assert_eq!(graph.points(), graph.vertices);
+        assert_eq!(graph.elements(), graph.vertices);
     }
 
     #[test]
