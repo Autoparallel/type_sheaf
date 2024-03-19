@@ -1,4 +1,3 @@
-use hex;
 use ring::digest::{self, SHA256};
 
 #[derive(Debug, Clone)]
