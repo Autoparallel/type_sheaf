@@ -60,7 +60,7 @@ mod tests {
             children: vec![],
             hash: hash(root_value),
         };
-        let mut tree = Tree { root: root };
+        let mut tree = Tree { root };
         println!("{:?}", tree.root.hash_to_hex());
 
         let child_value = vec!["b"];
