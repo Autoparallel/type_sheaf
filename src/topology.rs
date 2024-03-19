@@ -87,11 +87,7 @@ pub trait Section: Eq + PartialEq + Clone {
         domain: <Self::TopologicalSpace as TopologicalSpace>::OpenSet,
         section: Self,
     ) -> bool {
-        if self.restrict(domain.clone()) == section.restrict(domain.clone()) {
-            true
-        } else {
-            false
-        }
+        self.restrict(domain.clone()) == section.restrict(domain.clone())
     }
     fn glue(
         &self,

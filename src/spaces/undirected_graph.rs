@@ -1,7 +1,7 @@
-use crate::topology::{OpenSet, Section};
 use std::hash::Hash;
 
 use super::*;
+use crate::topology::{OpenSet, Section};
 
 pub struct UndirectedGraph {
     pub vertices: HashSet<usize>,

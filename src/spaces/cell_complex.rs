@@ -7,15 +7,19 @@ use crate::topology::{OpenSet, PreSheaf, Section, Sheaf, TopologicalSpace};
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Point<T: Eq + Hash + Clone>(T);
 
-/// Trait for an n-cell in a cell complex. Inherits from TopologicalSpace, and adds the cell's identification map.
+/// Trait for an n-cell in a cell complex. Inherits from TopologicalSpace, and
+/// adds the cell's identification map.
 pub trait Cell<T: Eq + Hash + Clone>:
     TopologicalSpace<Point = Point<T>, OpenSet = HashSet<Point<T>>>
 {
-    fn identification(&self, skeleton: &Skeleton<T>) -> HashSet<<Self as TopologicalSpace>::Point>; //Should return a set of points in the cell identified with previous skeleton points, and thus shouldn't be included in the next skeleton.
+    fn identification(&self, skeleton: &Skeleton<T>) -> HashSet<<Self as TopologicalSpace>::Point>; // Should return a set of points in the cell identified with previous skeleton
+                                                                                                    // points, and thus shouldn't be included in the next skeleton.
 }
 
-/// A skeleton is a collection of cells, glued together by their identification maps.
+/// A skeleton is a collection of cells, glued together by their identification
+/// maps.
 pub struct Skeleton<T: Eq + Hash + Clone> {
+    #[allow(clippy::type_complexity)]
     pub cells: Vec<Rc<dyn Cell<T, Point = Point<T>, OpenSet = HashSet<Point<T>>>>>,
     pub points: HashSet<Point<T>>,
     pub dim: usize,
@@ -35,28 +39,34 @@ impl<T: Eq + Hash + Clone> Skeleton<T> {
         }
     }
 
-    // This function adds a child skeleton to the current skeleton. This is helpful in tracking the filtration of the cell complex.
+    // This function adds a child skeleton to the current skeleton. This is helpful
+    // in tracking the filtration of the cell complex.
     pub fn add_child(&mut self, child: Skeleton<T>) {
         self.children.push(child);
         self.dim = self.children.len()
     }
 
-    // This function decides which points from the n-cell to include in the next skeleton based on the identification map of the specific n-cell implementation.
+    // This function decides which points from the n-cell to include in the next
+    // skeleton based on the identification map of the specific n-cell
+    // implementation.
     pub fn include_cell(
         &mut self,
         cell: Rc<dyn Cell<T, Point = Point<T>, OpenSet = HashSet<Point<T>>>>,
     ) {
         for points in cell.points() {
-            if !cell.identification(&self).contains(&points) {
+            if !cell.identification(self).contains(&points) {
                 self.points.insert(points);
-            } else {
             }
         }
         self.cells.push(cell);
     }
 }
-/// This struct of a cell complex contains the collect of cells, the set of points from each cell composing the complex, and the maximal dimension of the complex.
+
+/// This struct of a cell complex contains the collect of cells, the set of
+/// points from each cell composing the complex, and the maximal dimension of
+/// the complex.
 pub struct CellComplex<T: Eq + Hash + Clone> {
+    #[allow(clippy::type_complexity)]
     pub cells: Vec<Rc<dyn Cell<T, Point = Point<T>, OpenSet = HashSet<Point<T>>>>>,
     pub points: HashSet<Point<T>>,
     pub dim: usize,
@@ -83,7 +93,8 @@ impl<T: Eq + Hash + Clone> OpenSet for HashSet<Point<T>> {
     }
 }
 
-/// This implements the weak topology on the cell complex, where the open sets are the sets who's intersections are open in every cell.
+/// This implements the weak topology on the cell complex, where the open sets
+/// are the sets who's intersections are open in every cell.
 impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
     type Point = Point<T>;
     type OpenSet = HashSet<Point<T>>;
@@ -118,11 +129,7 @@ impl<T: Eq + Hash + Clone> TopologicalSpace for CellComplex<T> {
                 status.push(cell.is_open(intersection));
             }
         }
-        if status.into_iter().all(|x| x == true) {
-            true
-        } else {
-            false
-        }
+        status.into_iter().all(|x| x)
     }
 }
 
